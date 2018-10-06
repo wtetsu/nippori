@@ -60,6 +60,4 @@ typings/
 .*/
 dist-chrome/
 dist-firefox/
-dist-edge/
 *.zip
-
