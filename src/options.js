@@ -1,1 +1,3 @@
-alert("option");
+//alert("option");
+
+console.info("option");

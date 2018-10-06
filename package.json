@@ -16,7 +16,10 @@
     "test": "jest",
     "test-watch": "jest --watch"
   },
-  "dependencies": {},
+  "dependencies": {
+    "axios": "^0.18.0",
+    "sweetalert2": "^7.28.4"
+  },
   "devDependencies": {
     "@babel/core": "^7.1.2",
     "@babel/preset-env": "^7.1.0",

@@ -5,7 +5,8 @@ module.exports = {
   mode: process.env.NODE_ENV || "development",
   entry: {
     options: "./src/options.js",
-    content: "./src/content.js"
+    content: "./src/content.js",
+    popup: "./src/popup.js"
   },
   module: {
     rules: [
@@ -45,5 +46,6 @@ module.exports = {
         }
       : {},
   plugins: [new CopyWebpackPlugin([{ from: "static", to: "." }])],
-  devtool: process.env.NODE_ENV === "production" ? false : "cheap-module-source-map"
+  devtool:
+    process.env.NODE_ENV === "production" ? false : "cheap-module-source-map"
 };
