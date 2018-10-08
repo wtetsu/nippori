@@ -1,13 +1,13 @@
 {
-  "name": "Touzaisen",
+  "name": "Nippori",
   "version": "0.0.1",
   "options_ui": {
     "page": "options.html",
     "open_in_tab": true
   },
-  "permissions": ["activeTab", "http://api.search.nicovideo.jp/"],
+  "permissions": ["storage", "unlimitedStorage", "activeTab"],
   "browser_action": {
-    "default_title": "Touzaisen",
+    "default_title": "Nippori",
     "default_popup": "popup.html"
   },
   "manifest_version": 2,
@@ -16,5 +16,6 @@
     "48": "icon48.png",
     "128": "icon128.png"
   },
+  "web_accessible_resources": ["data/*.json"],
   "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'"
 }

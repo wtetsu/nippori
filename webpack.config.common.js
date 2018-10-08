@@ -1,5 +1,6 @@
 const UglifyJsPlugin = require("uglifyjs-webpack-plugin");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
+const { VueLoaderPlugin } = require("vue-loader");
 
 module.exports = {
   mode: process.env.NODE_ENV || "development",
@@ -24,11 +25,22 @@ module.exports = {
             options: { presets: ["@babel/env"] }
           }
         ]
+      },
+      {
+        test: /\.vue$/,
+        use: [
+          {
+            loader: "vue-loader"
+          }
+        ]
       }
     ]
   },
   resolve: {
-    extensions: [".js"]
+    extensions: [".js", ".vue"],
+    alias: {
+      vue$: "vue/dist/vue.esm.js"
+    }
   },
   optimization:
     process.env.NODE_ENV === "production"
@@ -45,7 +57,10 @@ module.exports = {
           ]
         }
       : {},
-  plugins: [new CopyWebpackPlugin([{ from: "static", to: "." }])],
+  plugins: [
+    new CopyWebpackPlugin([{ from: "static", to: "." }]),
+    new VueLoaderPlugin()
+  ],
   devtool:
     process.env.NODE_ENV === "production" ? false : "cheap-module-source-map"
 };

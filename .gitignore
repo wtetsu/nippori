@@ -61,3 +61,5 @@ typings/
 dist-chrome/
 dist-firefox/
 *.zip
+tool/
+static/data
