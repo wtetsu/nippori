@@ -14,7 +14,7 @@
   "dependencies": {
     "axios": "^0.18.0",
     "sweetalert2": "^7.28.4",
-    "tippy.js": "^3.0.3",
+    "tippy.js": "^3.0.6",
     "vuejs-paginate": "^2.0.1"
   },
   "devDependencies": {
@@ -23,7 +23,7 @@
     "babel-core": "^7.0.0-bridge.0",
     "babel-jest": "^23.6.0",
     "babel-loader": "^8.0.4",
-    "copy-webpack-plugin": "^4.5.2",
+    "copy-webpack-plugin": "^4.5.3",
     "eslint": "^5.6.1",
     "jest": "^23.6.0",
     "vue": "^2.5.17",
