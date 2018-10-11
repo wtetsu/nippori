@@ -7,33 +7,8 @@
   <link rel="stylesheet" href="popup.css">
 </head>
 
-<!-- <body style="min-width:500px;min-height:500px;"> -->
-
 <body>
-  <div id="app" style="min-width:500px;min-height:500px;">
-    <input type="button" value="btnTest" @click="btnTestPushed()" />
-    <input type="button" value="前の動画へ" @click="gotoPrev()" />
-    <input type="button" value="次の動画へ" @click="gotoNext()" />
-    <input type="text" v-model="searchText" @change="searchTextChanged()" ref="searchText" />
-    <input type="button" value="更新" @click="fetchRecords()" />
-
-    <paginate v-model="currentPage" :page-count="pageCount" :click-handler="onClickPagination" :prev-text="'Prev'"
-      :next-text="'Next'" :active-class="'current'" :container-class="'pagination'" :page-range="7">
-    </paginate>
-
-    <div v-for="r in filteredRecords" :key="r.contentId">
-      <a @click=" jumpToTheMovie(r.contentId)">
-        <img class="img" v-bind:src="r.thumbnailUrl" v-bind:data-tippy-content="r.description" style="cursor:pointer;"
-          width="65" height="50" />
-      </a>
-      <span v-bind:title="r.description">
-        {{ r.title }}
-      </span>
-      <!-- <font size="1" color="#a0a0a0" v-html="r.description">
-        </font> -->
-    </div>
-  </div>
-
+  <div id="app"></div>
   <script src="popup.js"></script>
 </body>
 

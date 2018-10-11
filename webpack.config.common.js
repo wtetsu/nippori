@@ -57,10 +57,6 @@ module.exports = {
           ]
         }
       : {},
-  plugins: [
-    new CopyWebpackPlugin([{ from: "static", to: "." }]),
-    new VueLoaderPlugin()
-  ],
-  devtool:
-    process.env.NODE_ENV === "production" ? false : "cheap-module-source-map"
+  plugins: [new CopyWebpackPlugin([{ from: "static", to: "." }]), new VueLoaderPlugin()],
+  devtool: process.env.NODE_ENV === "production" ? false : "cheap-module-source-map"
 };
