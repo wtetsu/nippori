@@ -1,22 +1,25 @@
 <template>
-  <div style="min-width:500px;min-height:500px;">
+  <div style="width:500px;height:550px;overflow:hidden;">
     <input type="button" value="前の動画へ" @click="gotoPrev()" />
     <input type="button" value="次の動画へ" @click="gotoNext()" />
+    <input type="button" value="更新" @click="fetchRecords()" />
 
     <br />
 
     <input type="text" v-model="searchText" v-on:keyup="searchTextChanged()" @change="searchTextChanged()" ref="searchText" />
-    <input type="button" value="更新" @click="fetchRecords()" />
 
     <paginate v-model="currentPage" :page-count="pageCount" :click-handler="onClickPagination" :prev-text="'Prev'"
       :next-text="'Next'" :active-class="'current'" :container-class="'pagination'" :page-range="7">
     </paginate>
 
+    <div style="width:100%;height:100px;overflow-y:scroll;">
+      <span v-html="description"></span>
+    </div>
 
-  <div style="height:400px;overflow-y:scroll;">
+    <div style="height:350px;overflow-y:scroll;">
       <div v-for="r in filteredRecords" :key="r.contentId">
         <a @click=" jumpToTheMovie(r.contentId)">
-          <img class="img" v-bind:src="r.thumbnailUrl" style="cursor:pointer;" width="65" height="50" />
+          <img class="img" v-bind:src="r.thumbnailUrl" v-on:mouseover="mouseover(r.description)" style="cursor:pointer;" width="65" height="50" />
         </a>
         <span v-bind:title="r.description">
           {{ r.title }}
@@ -44,12 +47,12 @@ export default {
       records: [],
       currentPage: 1,
       pageSize: 200,
-      pageCount: 1
+      pageCount: 1,
+      description: "ここに動画の説明が表示されます。"
     };
   },
   async created() {
     this.records = await loadInitialData(2009, 2018);
-    //this.records = [];
     this.pageCount = Math.ceil(this.records.length / this.pageSize);
 
     chrome.tabs.getSelected(null, tab => {
@@ -68,12 +71,6 @@ export default {
     if (r.searchText) {
       this.searchText = r.searchText;
     }
-
-    // chrome.storage.local.get(["searchText"], r => {
-    //   if (r.searchText) {
-    //     this.searchText = r.searchText;
-    //   }
-    // });
   },
   mounted() {
     this.$refs.searchText.focus();
@@ -95,6 +92,9 @@ export default {
         searchText: this.searchText
       });
       this.currentPage = 1;
+    },
+    mouseover(description) {
+      this.description = description;
     },
     gotoPrev() {
       if (!this.activeContentId) {
