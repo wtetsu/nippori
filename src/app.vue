@@ -1,5 +1,5 @@
 <template>
-  <div style="width:600px;height:550px;overflow:hidden;">
+  <div style="width:450px;height:550px;overflow:hidden;">
     <input type="button" value="前の動画へ" @click="gotoPrev()" />
     <input type="button" value="次の動画へ" @click="gotoNext()" />
     <input type="button" value="更新" @click="fetchRecords()" />
@@ -17,9 +17,10 @@
       <span v-html="description"></span>
     </div>
 
-    <div style="height:350px;overflow-y:scroll;">
+    <div style="height:300px;overflow-y:scroll;">
       <div v-for="dateRecords in filteredRecords" :key="dateRecords.date">
-        <h3>{{dateRecords.date}}</h3>
+        <!-- <div>{{dateRecords.date}}</div> -->
+        <span>{{dateRecords.date}}</span>
         <span v-for="r in dateRecords.records" :key="r.contentId">
           <a @click=" jumpToTheMovie(r.contentId)">
             <img class="img" v-bind:src="r.thumbnailUrl" v-on:mouseover="mouseover(r.description)" style="cursor:pointer;" width="65" height="50" />
@@ -34,8 +35,8 @@
 </template>
 
 <script>
-import loadInitialData from "./loadinitialdata";
 import storage from "./storage";
+import record from "./record";
 
 const normalizeTitleText = str => {
   return str
@@ -48,21 +49,21 @@ export default {
   data: function() {
     return {
       searchText: "",
-      records: [],
       currentPage: 1,
-      pageSize: 200,
+      pageSize: 100,
       pageCount: 1,
       description: "ここに動画の説明が表示されます。",
       searchResult: "100 ms"
     };
   },
   async created() {
-    this.records = await loadInitialData(2009, 2018);
-    this.pageCount = Math.ceil(this.records.length / this.pageSize);
+    this.records = [];
+    await record.initialize(2009, 2018);
+    this.pageCount = Math.ceil(record.search().length / this.pageSize);
 
     chrome.tabs.getSelected(null, tab => {
       let contentId = null;
-      const baseUrl = "http://www.nicovideo.jp/watch/";
+      const baseUrl = "https://www.nicovideo.jp/watch/";
       if (tab.url.startsWith(baseUrl)) {
         const relativeUrl = tab.url.replace(baseUrl, "");
         if (relativeUrl.startsWith("sm")) {
@@ -78,7 +79,9 @@ export default {
     }
   },
   mounted() {
-    this.$refs.searchText.focus();
+    if (this.$refs.searchText) {
+      this.$refs.searchText.focus();
+    }
   },
   // props: {
   //   searchText: String,
@@ -89,7 +92,6 @@ export default {
   // },
   methods: {
     onClickPagination(pageNum) {
-      console.info(pageNum);
       this.currentPage = pageNum;
     },
     searchTextChanged() {
@@ -97,6 +99,7 @@ export default {
         searchText: this.searchText
       });
       this.currentPage = 1;
+      this.description = "";
     },
     mouseover(description) {
       this.description = description;
@@ -105,16 +108,18 @@ export default {
       if (!this.activeContentId) {
         return;
       }
-      const index = this.records.findIndex(a => a.contentId === this.activeContentId);
-      const newContentId = this.records[index + 1].contentId;
+      const records = record.search();
+      const index = records.findIndex(a => a.contentId === this.activeContentId);
+      const newContentId = records[index + 1].contentId;
       this.jumpToTheMovie(newContentId);
     },
     gotoNext() {
       if (!this.activeContentId) {
         return;
       }
-      const index = this.records.findIndex(a => a.contentId === this.activeContentId);
-      const newContentId = this.records[index - 1].contentId;
+      const records = record.search();
+      const index = records.findIndex(a => a.contentId === this.activeContentId);
+      const newContentId = records[index - 1].contentId;
       this.jumpToTheMovie(newContentId);
     },
 
@@ -122,104 +127,72 @@ export default {
       if (!contentId) {
         return;
       }
-      const url = `http://www.nicovideo.jp/watch/${contentId}`;
+      const url = `https://www.nicovideo.jp/watch/${contentId}`;
       chrome.tabs.update({
         url: url
       });
       this.activeContentId = contentId;
     },
     fetchRecords() {
-      const apiEndpoint = "http://api.search.nicovideo.jp/api/v2/video/contents/search";
-      const searchTag = "%E3%82%B9%E3%83%912X%E6%9D%B1%E8%A5%BF%E6%88%A6";
-      const fields = "title,contentId,description,startTime,thumbnailUrl,viewCounter";
-      const apiUrl = `${apiEndpoint}?q=${searchTag}&targets=tags&_sort=-startTime&fields=${fields}`;
-
-      axios.get(apiUrl).then(r => {
-        if (r.data.meta.status !== 200) {
-          return;
-        }
-        //r.meta.totalCount;
-        const data = r.data.data.map(a => {
-          const o = Object.assign({}, a);
-          o.title = normalizeTitleText(o.title);
-          return o;
-        });
-        this.records = data;
-      });
+      // const apiEndpoint = "http://api.search.nicovideo.jp/api/v2/video/contents/search";
+      // const searchTag = "%E3%82%B9%E3%83%912X%E6%9D%B1%E8%A5%BF%E6%88%A6";
+      // const fields = "title,contentId,description,startTime,thumbnailUrl,viewCounter";
+      // const apiUrl = `${apiEndpoint}?q=${searchTag}&targets=tags&_sort=-startTime&fields=${fields}`;
+      // axios.get(apiUrl).then(r => {
+      //   if (r.data.meta.status !== 200) {
+      //     return;
+      //   }
+      //   //r.meta.totalCount;
+      //   const data = r.data.data.map(a => {
+      //     const o = Object.assign({}, a);
+      //     o.title = normalizeTitleText(o.title);
+      //     return o;
+      //   });
+      //   this.records = data;
+      // });
     }
   },
   computed: {
     filteredRecords() {
+      console.info("filteredRecords");
+      const startTime = performance.now();
       const searchText = this.searchText ? this.searchText.trim() : "";
       const startPosition = this.pageSize * (this.currentPage - 1);
 
-      // let filteredRecords;
-      // if (searchText) {
-      //   filteredRecords = this.records.filter(a => {
-      //     return a.description.includes(searchText);
-      //   });
-      // } else {
-      //   filteredRecords = this.records;
-      // }
-
-      const result = [
-        // {
-        //   date: "20070101",
-        //   records: []
-        // },
-        // {
-        //   date: "20070108",
-        //   records: []
-        // },
-      ];
+      const result = [];
       let dateRecords = null;
-      for (let i = 0; i < this.records.length; i++) {
-        const rec = this.records[i];
+      let thisDateRecordsHit = false;
+      let dateCount = 0;
+      const records = record.search();
+      let len = records.length;
+      for (let i = 0; i < len; i++) {
+        const rec = records[i];
         if (dateRecords == null || dateRecords.date !== rec.date) {
-          if (dateRecords) {
+          if (thisDateRecordsHit) {
             result.push(dateRecords);
+            dateCount += 1;
+            thisDateRecordsHit = false;
           }
           dateRecords = {
             date: rec.date,
             records: []
           };
         }
+        if (rec.description.toLowerCase().includes(searchText.toLowerCase())) {
+          thisDateRecordsHit = true;
+        }
         dateRecords.records.push(rec);
       }
-      if (dateRecords) {
+      if (thisDateRecordsHit) {
         result.push(dateRecords);
       }
-      console.info(result);
-      return result;
-    },
 
-    filteredRecords_() {
-      const startTime = new Date().getTime();
+      this.pageCount = Math.ceil(result.length / this.pageSize);
+      const computedRecords = result.slice(startPosition, startPosition + this.pageSize);
 
-      const searchText = this.searchText ? this.searchText.trim() : "";
-      const startPosition = this.pageSize * (this.currentPage - 1);
-
-      let filteredRecords;
-      if (searchText) {
-        filteredRecords = this.records.filter(a => {
-          return a.description.includes(searchText);
-        });
-      } else {
-        filteredRecords = this.records;
-      }
-
-      this.pageCount = Math.ceil(filteredRecords.length / this.pageSize);
-      // if (this.currentPage > this.pageCount) {
-      //   this.currentPage = this.pageCount;
-      // }
-
-      const computedRecords = filteredRecords.slice(startPosition, startPosition + this.pageSize).map(a => {
-        a.title = normalizeTitleText(a.title);
-        return a;
-      });
-
-      const time = new Date().getTime() - startTime;
-      this.searchResult = `${filteredRecords.length}件(${time}ms)`;
+      const elapsed = performance.now() - startTime;
+      const time = Math.round(elapsed * 100) / 100;
+      this.searchResult = `${result.length}件(${time}ms)`;
 
       return computedRecords;
     }

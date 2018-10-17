@@ -1,8 +1,10 @@
+let initialRecords = [];
+
 const loadInitialData = async (from, to) => {
   const records = [];
 
   for (let year = from; year <= to; year++) {
-    const newRecords = await registerDict(`/data/data_${year}.json`);
+    const newRecords = await loadFile(`/data/data_${year}.json`);
     records.push(...newRecords);
   }
 
@@ -15,11 +17,18 @@ const loadInitialData = async (from, to) => {
   return sortedRecords;
 };
 
-const registerDict = async fname => {
+const loadFile = async fname => {
   const url = chrome.extension.getURL(fname);
   const response = await fetch(url);
   const data = await response.json();
   return data.records;
 };
 
-export default loadInitialData;
+export default {
+  async initialize(from, to) {
+    initialRecords = await loadInitialData(from, to);
+  },
+  search() {
+    return initialRecords;
+  }
+};
