@@ -5,8 +5,6 @@ const { VueLoaderPlugin } = require("vue-loader");
 module.exports = {
   mode: process.env.NODE_ENV || "development",
   entry: {
-    options: "./src/options.js",
-    content: "./src/content.js",
     popup: "./src/popup.js"
   },
   module: {

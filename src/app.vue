@@ -19,14 +19,12 @@
 
     <div style="height:350px;overflow-y:scroll;">
       <div v-for="dateRecords in filteredRecords" :key="dateRecords.date">
-        <!-- <div>{{dateRecords.date}}</div> -->
         <span>{{dateRecords.date}}</span>
         <span v-for="r in dateRecords.records" :key="r.contentId">
           <a @click=" jumpToTheMovie(r.contentId)">
             <img class="img" v-bind:src="r.thumbnailUrl" v-on:mouseover="mouseover(r.description)" style="cursor:pointer;" width="52" height="40" />
           </a>
           <span v-bind:title="r.description">
-            <!-- {{ r.title }} -->
           </span>
         </span>
       </div>
@@ -62,7 +60,7 @@ export default {
 
     chrome.tabs.getSelected(null, tab => {
       let contentId = null;
-      if (tab.url.startsWith(BASE_URL)) {
+      if (tab.url && tab.url.startsWith(BASE_URL)) {
         const relativeUrl = tab.url.replace(BASE_URL, "");
         if (relativeUrl.startsWith("sm")) {
           contentId = relativeUrl;
@@ -132,23 +130,20 @@ export default {
       });
       this.activeContentId = contentId;
     },
-    fetchRecords() {
-      fetcher.fetch();
+    async fetchRecords() {
+      const latestContentId = record.getLatestContentId();
+      const records = await fetcher.fetch(latestContentId);
+      record.saveRecords(records);
     }
   },
   computed: {
     filteredRecords() {
       _startTime = performance.now();
-
-      const startTime = performance.now();
       const startPosition = this.pageSize * (this.currentPage - 1);
-
       const filteredRecords = record.search(this.searchText);
-
       this.recordCount = filteredRecords.length;
       this.pageCount = Math.ceil(this.recordCount / this.pageSize);
       const computedRecords = filteredRecords.slice(startPosition, startPosition + this.pageSize);
-
       return computedRecords;
     }
   }

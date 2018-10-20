@@ -1,6 +1,7 @@
-let _initialRecords = [];
+let _bundledRecords = [];
+let _fetchedRecords = [];
 
-const loadInitialData = async (from, to) => {
+const loadBundledData = async (from, to) => {
   const records = [];
 
   for (let year = from; year <= to; year++) {
@@ -26,40 +27,80 @@ const loadFile = async fname => {
 
 const filter = (initialRecords, aSearchText) => {
   const searchText = aSearchText ? aSearchText.trim() : "";
+  const searchTextList = searchText.split(/ +/);
 
   const filteredRecords = [];
 
   let dateRecords = null;
-  let thisDateRecordsHit = false;
+
   for (let i = 0; i < initialRecords.length; i++) {
     const rec = initialRecords[i];
     if (dateRecords == null || dateRecords.date !== rec.date) {
-      if (thisDateRecordsHit) {
-        filteredRecords.push(dateRecords);
-        thisDateRecordsHit = false;
+      if (dateRecords) {
+        if (hit(dateRecords.records, searchTextList)) {
+          filteredRecords.push(dateRecords);
+        }
       }
       dateRecords = {
         date: rec.date,
         records: []
       };
     }
-    if (rec.description.toLowerCase().includes(searchText.toLowerCase())) {
-      thisDateRecordsHit = true;
-    }
+
     dateRecords.records.unshift(rec);
   }
-  if (thisDateRecordsHit) {
+
+  if (hit(dateRecords.records, searchTextList)) {
     filteredRecords.push(dateRecords);
   }
 
   return filteredRecords;
 };
 
+const hit = (records, searchTextList) => {
+  let hitCount = 0;
+  for (let i = 0; i < searchTextList.length; i++) {
+    const searchText = searchTextList[i];
+    for (let j = 0; j < records.length; j++) {
+      if (records[j].description.toLowerCase().includes(searchText.toLowerCase())) {
+        hitCount += 1;
+        break;
+      }
+    }
+  }
+  return hitCount >= searchTextList.length;
+};
+
 export default {
   async initialize(from, to) {
-    _initialRecords = await loadInitialData(from, to);
+    _bundledRecords = await loadBundledData(from, to);
   },
   search(searchText) {
-    return filter(_initialRecords, searchText);
+    const latestContentId = _bundledRecords && _bundledRecords[0] && _bundledRecords[0].contentId;
+    if (!latestContentId) {
+      return [];
+    }
+
+    const fetchedRecords = [];
+
+    if (_fetchedRecords) {
+      for (let i = 0; i < _fetchedRecords.length; i++) {
+        const r = _fetchedRecords[i];
+        if (r.contentId === latestContentId) {
+          break;
+        }
+        fetchedRecords.push(r);
+      }
+    }
+
+    const mergedRecords = fetchedRecords.concat(_bundledRecords);
+
+    return filter(mergedRecords, searchText);
+  },
+  getLatestContentId() {
+    return _bundledRecords && _bundledRecords[0] && _bundledRecords[0].contentId;
+  },
+  saveRecords(newRecords) {
+    _fetchedRecords = newRecords;
   }
 };
