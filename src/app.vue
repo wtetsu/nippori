@@ -1,5 +1,5 @@
 <template>
-  <div style="width:450px;height:550px;overflow:hidden;">
+  <div style="width:450px;height:580px;overflow:hidden;">
     <input type="button" value="前の動画へ" @click="gotoPrev()" />
     <input type="button" value="次の動画へ" @click="gotoNext()" />
     <input type="button" value="更新" @click="fetchRecords()" />
@@ -17,13 +17,13 @@
       <span v-html="description"></span>
     </div>
 
-    <div style="height:300px;overflow-y:scroll;">
+    <div style="height:350px;overflow-y:scroll;">
       <div v-for="dateRecords in filteredRecords" :key="dateRecords.date">
         <!-- <div>{{dateRecords.date}}</div> -->
         <span>{{dateRecords.date}}</span>
         <span v-for="r in dateRecords.records" :key="r.contentId">
           <a @click=" jumpToTheMovie(r.contentId)">
-            <img class="img" v-bind:src="r.thumbnailUrl" v-on:mouseover="mouseover(r.description)" style="cursor:pointer;" width="65" height="50" />
+            <img class="img" v-bind:src="r.thumbnailUrl" v-on:mouseover="mouseover(r.description)" style="cursor:pointer;" width="52" height="40" />
           </a>
           <span v-bind:title="r.description">
             <!-- {{ r.title }} -->
@@ -37,35 +37,33 @@
 <script>
 import storage from "./storage";
 import record from "./record";
+import fetcher from "./fetcher";
 
-const normalizeTitleText = str => {
-  return str
-    .replace("スパIIX 西日暮里バーサス火曜東西戦", "")
-    .replace("ハイパーストII 西日暮里バーサス火曜東西戦", "")
-    .trim();
-};
+const BASE_URL = "https://www.nicovideo.jp/watch/";
+
+let _startTime = null;
 
 export default {
   data: function() {
     return {
       searchText: "",
       currentPage: 1,
-      pageSize: 100,
+      pageSize: 80,
       pageCount: 1,
       description: "ここに動画の説明が表示されます。",
-      searchResult: "100 ms"
+      searchResult: "-",
+      recordCount: 0
     };
   },
   async created() {
-    this.records = [];
     await record.initialize(2009, 2018);
     this.pageCount = Math.ceil(record.search().length / this.pageSize);
+    this.currentPage = 1;
 
     chrome.tabs.getSelected(null, tab => {
       let contentId = null;
-      const baseUrl = "https://www.nicovideo.jp/watch/";
-      if (tab.url.startsWith(baseUrl)) {
-        const relativeUrl = tab.url.replace(baseUrl, "");
+      if (tab.url.startsWith(BASE_URL)) {
+        const relativeUrl = tab.url.replace(BASE_URL, "");
         if (relativeUrl.startsWith("sm")) {
           contentId = relativeUrl;
         }
@@ -83,13 +81,14 @@ export default {
       this.$refs.searchText.focus();
     }
   },
-  // props: {
-  //   searchText: String,
-  //   pageCount: Number,
-  //   currentPage: Number,
-  //   message: String,
-  //   records: Array
-  // },
+  updated() {
+    if (_startTime !== null) {
+      const elapsed = performance.now() - _startTime;
+      const time = Math.round(elapsed * 100) / 100;
+      this.searchResult = `${this.recordCount}件(${time}ms)`;
+      _startTime = null;
+    }
+  },
   methods: {
     onClickPagination(pageNum) {
       this.currentPage = pageNum;
@@ -127,72 +126,28 @@ export default {
       if (!contentId) {
         return;
       }
-      const url = `https://www.nicovideo.jp/watch/${contentId}`;
+      const url = BASE_URL + contentId;
       chrome.tabs.update({
         url: url
       });
       this.activeContentId = contentId;
     },
     fetchRecords() {
-      // const apiEndpoint = "http://api.search.nicovideo.jp/api/v2/video/contents/search";
-      // const searchTag = "%E3%82%B9%E3%83%912X%E6%9D%B1%E8%A5%BF%E6%88%A6";
-      // const fields = "title,contentId,description,startTime,thumbnailUrl,viewCounter";
-      // const apiUrl = `${apiEndpoint}?q=${searchTag}&targets=tags&_sort=-startTime&fields=${fields}`;
-      // axios.get(apiUrl).then(r => {
-      //   if (r.data.meta.status !== 200) {
-      //     return;
-      //   }
-      //   //r.meta.totalCount;
-      //   const data = r.data.data.map(a => {
-      //     const o = Object.assign({}, a);
-      //     o.title = normalizeTitleText(o.title);
-      //     return o;
-      //   });
-      //   this.records = data;
-      // });
+      fetcher.fetch();
     }
   },
   computed: {
     filteredRecords() {
-      console.info("filteredRecords");
+      _startTime = performance.now();
+
       const startTime = performance.now();
-      const searchText = this.searchText ? this.searchText.trim() : "";
       const startPosition = this.pageSize * (this.currentPage - 1);
 
-      const result = [];
-      let dateRecords = null;
-      let thisDateRecordsHit = false;
-      let dateCount = 0;
-      const records = record.search();
-      let len = records.length;
-      for (let i = 0; i < len; i++) {
-        const rec = records[i];
-        if (dateRecords == null || dateRecords.date !== rec.date) {
-          if (thisDateRecordsHit) {
-            result.push(dateRecords);
-            dateCount += 1;
-            thisDateRecordsHit = false;
-          }
-          dateRecords = {
-            date: rec.date,
-            records: []
-          };
-        }
-        if (rec.description.toLowerCase().includes(searchText.toLowerCase())) {
-          thisDateRecordsHit = true;
-        }
-        dateRecords.records.push(rec);
-      }
-      if (thisDateRecordsHit) {
-        result.push(dateRecords);
-      }
+      const filteredRecords = record.search(this.searchText);
 
-      this.pageCount = Math.ceil(result.length / this.pageSize);
-      const computedRecords = result.slice(startPosition, startPosition + this.pageSize);
-
-      const elapsed = performance.now() - startTime;
-      const time = Math.round(elapsed * 100) / 100;
-      this.searchResult = `${result.length}件(${time}ms)`;
+      this.recordCount = filteredRecords.length;
+      this.pageCount = Math.ceil(this.recordCount / this.pageSize);
+      const computedRecords = filteredRecords.slice(startPosition, startPosition + this.pageSize);
 
       return computedRecords;
     }

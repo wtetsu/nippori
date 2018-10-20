@@ -1,7 +1,3 @@
-//import swal from "sweetalert2";
-// import tippy from "tippy.js";
-// import "tippy.js/dist/tippy.css";
-import axios from "axios";
 import Vue from "vue";
 import App from "./app";
 
