@@ -1,6 +1,7 @@
 const replace = (sourceText, patterns, fn) => {
   let builtText = "";
   let currentIndex = 0;
+  const lowerSourceText = sourceText.toLowerCase();
 
   for (;;) {
     let found = false;
@@ -9,11 +10,11 @@ const replace = (sourceText, patterns, fn) => {
       if (!pattern) {
         break;
       }
-      const foundIndex = sourceText.indexOf(pattern, currentIndex);
+      const foundIndex = lowerSourceText.indexOf(pattern.toLowerCase(), currentIndex);
       if (foundIndex >= 0) {
         found = true;
         builtText += sourceText.substring(currentIndex, foundIndex);
-        builtText += fn(pattern);
+        builtText += fn(sourceText.substring(foundIndex, foundIndex + pattern.length));
         currentIndex = foundIndex + pattern.length;
         break;
       }

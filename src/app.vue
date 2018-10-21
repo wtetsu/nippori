@@ -10,9 +10,9 @@
       <a class="square_btn" @click="gotoNext()">{{nextText}}</a>
 
       <span style="float: right">
+        <img src="loading.gif" v-if="loading" width="12" height="12"/>
         <a class="square_btn2" @click="fetchRecords()">最新データ取得</a>
       </span>
-      <img src="loading.gif" v-if="loading" width="12" height="12"/>
     </div>
 
     <hr/>
@@ -227,11 +227,7 @@ export default {
       this.recordCount = filteredRecords.length;
       this.pageCount = Math.ceil(this.recordCount / this.pageSize);
       const computedRecords = filteredRecords.slice(startPosition, startPosition + this.pageSize);
-
       emphasize(computedRecords, this.searchText.trim());
-
-      console.info(computedRecords.length);
-
       return computedRecords;
     }
   }
