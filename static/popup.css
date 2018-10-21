@@ -1,3 +1,8 @@
+ul.pagination {
+  padding-left: 0px;
+  padding-right: 0px;
+}
+
 .pagination li {
   display: inline-block;
 }
@@ -21,4 +26,22 @@
 
 .pagination a:hover:not(.active) {
   background-color: #ddd;
+}
+
+.imgWrap {
+  overflow: hidden;
+  width: 320px;
+  height: 180px;
+}
+.imgWrap img {
+  transition-duration: 0.2s;
+}
+.imgWrap img:hover {
+  transform: scale(1.2);
+  transition-duration: 0.2s;
+}
+
+.hit {
+  color: #f00000;
+  font-weight: bold;
 }
