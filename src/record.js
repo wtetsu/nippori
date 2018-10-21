@@ -160,6 +160,19 @@ export default {
     return _bundledRecords && _bundledRecords[0] && _bundledRecords[0].contentId;
   },
 
+  getRelativeRecord(contentId, offset) {
+    if (!contentId) {
+      return null;
+    }
+    let result = null;
+    const records = this.getRawRecords();
+    const index = records.findIndex(a => a.contentId === contentId);
+    if (index >= 0) {
+      result = records[index + offset];
+    }
+    return result;
+  },
+
   // TODO
   saveRecords(newRecords) {
     for (let i = 0; i < newRecords.length; i++) {

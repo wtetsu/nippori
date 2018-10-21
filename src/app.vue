@@ -1,13 +1,21 @@
 <template>
   <div style="width:450px;height:580px;overflow:hidden;">
-    <input type="button" value="前の動画へ" @click="gotoPrev()" />
-    <input type="button" value="次の動画へ" @click="gotoNext()" />
-    <input type="button" value="更新" @click="fetchRecords()" />
-    <span style="color:#555555;font-size:smaller;">{{lastUpdated}}</span>
 
-    <img src="loading.gif" v-if="loading" width="12" height="12"/>
+    <div>
+      <span style="color:#555555;font-size:smaller;">{{lastUpdated}}</span>
+    </div>
 
-    <br />
+    <div style="height:35px;">
+      <a class="square_btn" @click="gotoPrev()">{{prevText}}</a>
+      <a class="square_btn" @click="gotoNext()">{{nextText}}</a>
+
+      <span style="float: right">
+        <a class="square_btn2" @click="fetchRecords()">最新データ取得</a>
+      </span>
+      <img src="loading.gif" v-if="loading" width="12" height="12"/>
+    </div>
+
+    <hr/>
 
     <input type="text" v-model="searchText" v-on:keyup="searchTextChanged()" @change="searchTextChanged()" ref="searchText"  maxlength="50" />
     {{searchResult}}
@@ -73,13 +81,20 @@ export default {
       searchResult: "-",
       recordCount: 0,
       loading: false,
-      lastUpdated: ""
+      lastUpdated: "",
+      prevText: "-",
+      nextText: "-"
     };
   },
   async created() {
-    await record.initialize(2009, 2018);
     this.pageCount = Math.ceil(record.search().length / this.pageSize);
     this.currentPage = 1;
+
+    await record.initialize(2009, 2018);
+
+    const orgSearchText = this.searchText;
+    this.searchText = " ";
+    this.searchText = orgSearchText;
 
     chrome.tabs.getSelected(null, tab => {
       let contentId = null;
@@ -90,6 +105,7 @@ export default {
         }
       }
       this.activeContentId = contentId;
+      this.updateLinkText(contentId);
     });
 
     chrome.storage.local.get(["lastUpdated"], r => {
@@ -104,7 +120,7 @@ export default {
       this.searchText = r.searchText;
     }
   },
-  mounted() {
+  async mounted() {
     if (this.$refs.searchText) {
       this.$refs.searchText.focus();
     }
@@ -132,25 +148,15 @@ export default {
       this.descriptionHtml = descriptionHtml;
     },
     gotoPrev() {
-      if (!this.activeContentId) {
-        return;
-      }
-      const records = record.getRawRecords();
-      const index = records.findIndex(a => a.contentId === this.activeContentId);
-      if (index >= 1 && index < records.length - 1) {
-        const newContentId = records[index + 1].contentId;
-        this.jumpToTheMovie(newContentId);
+      const r = record.getRelativeRecord(this.activeContentId, +1);
+      if (r) {
+        this.jumpToTheMovie(r.contentId);
       }
     },
     gotoNext() {
-      if (!this.activeContentId) {
-        return;
-      }
-      const records = record.getRawRecords();
-      const index = records.findIndex(a => a.contentId === this.activeContentId);
-      if (index >= 0) {
-        const newContentId = records[index - 1].contentId;
-        this.jumpToTheMovie(newContentId);
+      const r = record.getRelativeRecord(this.activeContentId, -1);
+      if (r) {
+        this.jumpToTheMovie(r.contentId);
       }
     },
 
@@ -163,7 +169,31 @@ export default {
         url: url
       });
       this.activeContentId = contentId;
+      this.updateLinkText(contentId);
     },
+
+    updateLinkText(contentId) {
+      const recPrev = record.getRelativeRecord(contentId, +1);
+      const recNext = record.getRelativeRecord(contentId, -1);
+
+      this.prevText = this.createLinkText(recPrev);
+      this.nextText = this.createLinkText(recNext);
+    },
+
+    createLinkText(rec) {
+      if (!rec) {
+        return "-";
+      }
+      const index = rec.title.indexOf(rec.date);
+      let text;
+      if (index >= 0) {
+        text = rec.title.substring(index) + "に移動";
+      } else {
+        text = rec.date;
+      }
+      return text;
+    },
+
     async fetchRecords() {
       this.loading = true;
 
@@ -177,13 +207,16 @@ export default {
           lastUpdated: lastUpdated
         });
         this.lastUpdated = "最終更新:" + lastUpdated;
+      } catch (e) {
+        alert(e.message);
       } finally {
         this.loading = false;
       }
 
       const orgText = this.searchText;
-      this.searchText = "";
+      this.searchText = " ";
       this.searchText = orgText;
+      this.descriptionHtml = "";
     }
   },
   computed: {
@@ -196,6 +229,8 @@ export default {
       const computedRecords = filteredRecords.slice(startPosition, startPosition + this.pageSize);
 
       emphasize(computedRecords, this.searchText.trim());
+
+      console.info(computedRecords.length);
 
       return computedRecords;
     }
