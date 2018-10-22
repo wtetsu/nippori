@@ -79,3 +79,13 @@ ul.pagination {
   background: #e4883d;
   color: white;
 }
+
+img.normalImage {
+  border: 3px solid white;
+  border-style: none solid none solid;
+}
+
+img.currentImage {
+  border: 3px solid red;
+  border-style: none solid none solid;
+}

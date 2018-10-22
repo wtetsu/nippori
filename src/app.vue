@@ -1,11 +1,11 @@
 <template>
   <div style="width:450px;height:580px;overflow:hidden;">
 
-    <div>
+    <div  style="position: absolute; top:3px; right:3px;">
       <span style="color:#555555;font-size:smaller;">{{lastUpdated}}</span>
     </div>
 
-    <div style="height:35px;">
+    <div style="height:35px;margin-top:10px;">
       <a class="square_btn" @click="gotoPrev()">{{prevText}}</a>
       <a class="square_btn" @click="gotoNext()">{{nextText}}</a>
 
@@ -30,10 +30,10 @@
         <span>{{dateRecords.date}}</span>
         <span v-for="r in dateRecords.records" :key="r.contentId" class="imgWrap">
           <a @click=" jumpToTheMovie(r.contentId)">
-            <img class="img" v-bind:src="r.thumbnailUrl" v-on:mouseover="mouseover(r.descriptionHtml)" style="cursor:pointer;" width="52" height="40" />
+            <img class="img" v-bind:src="r.thumbnailUrl" v-on:mouseover="mouseover(r.descriptionHtml)"
+              :class="{currentImage:(activeContentId==r.contentId), normalImage:(activeContentId!=r.contentId)}"
+              style="cursor:pointer;" width="52" height="40" />
           </a>
-          <span v-bind:title="r.description">
-          </span>
         </span>
       </div>
       <div style="height:250px;"></div>
