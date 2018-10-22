@@ -1,12 +1,5 @@
 import axios from "axios";
 
-// const normalizeTitleText = str => {
-//   return str
-//     .replace("スパIIX 西日暮里バーサス火曜東西戦", "")
-//     .replace("ハイパーストII 西日暮里バーサス火曜東西戦", "")
-//     .trim();
-// };
-
 // http://site.nicovideo.jp/search-api-docs/search.html
 const API_ENDPOINT = "https://api.search.nicovideo.jp/api/v2/video/contents/search";
 const SEARCH_TAG = "%E3%82%B9%E3%83%912X%E6%9D%B1%E8%A5%BF%E6%88%A6";
@@ -19,13 +12,7 @@ const fetchRecords = async offset => {
     if (r.data.meta.status !== 200) {
       return;
     }
-    //r.meta.totalCount;
-    const data = r.data.data.map(a => {
-      const o = Object.assign({}, a);
-      //o.title = normalizeTitleText(o.title);
-      return o;
-    });
-    return data;
+    return r.data.data;
   });
 };
 

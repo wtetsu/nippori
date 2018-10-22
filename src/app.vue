@@ -17,7 +17,7 @@
 
     <hr/>
 
-    <input type="text" v-model="searchText" v-on:keyup="searchTextChanged()" @change="searchTextChanged()" ref="searchText"  maxlength="50" />
+    <input type="search" v-model="searchText" v-on:keyup="searchTextChanged()" @change="searchTextChanged()" ref="searchText"  maxlength="50" />
     {{searchResult}}
 
     <paginate v-model="currentPage" :page-count="pageCount" :click-handler="onClickPagination" :prev-text="'←'"
@@ -78,7 +78,7 @@ export default {
       pageSize: 70,
       pageCount: 1,
       descriptionHtml: "",
-      searchResult: "-",
+      searchResult: "",
       recordCount: 0,
       loading: false,
       lastUpdated: "",
@@ -86,7 +86,8 @@ export default {
       nextText: "-",
       enablePrevText: false,
       enableNextText: false,
-      activeContentId: null
+      activeContentId: null,
+      searchTextChangedCount: 0
     };
   },
   async created() {
@@ -111,16 +112,14 @@ export default {
       this.updateLinkText(contentId);
     });
 
-    chrome.storage.local.get(["lastUpdated"], r => {
-      const lastUpdated = r.lastUpdated;
-      if (lastUpdated) {
-        this.lastUpdated = "最終更新:" + lastUpdated;
-      }
-    });
+    const lastUpdated = await storage.getDatum("lastUpdated");
+    if (lastUpdated) {
+      this.lastUpdated = "最終更新:" + lastUpdated;
+    }
 
-    const r = await storage.get(["searchText"]);
-    if (r.searchText) {
-      this.searchText = r.searchText;
+    const searchText = await storage.getDatum("searchText");
+    if (searchText) {
+      this.searchText = searchText;
     }
   },
   async mounted() {
@@ -129,7 +128,7 @@ export default {
     }
   },
   updated() {
-    if (_startTime !== null) {
+    if (_startTime !== null && this.searchTextChangedCount >= 1) {
       const elapsed = performance.now() - _startTime;
       const time = Math.round(elapsed * 100) / 100;
       this.searchResult = `${this.recordCount}件(${time}ms)`;
@@ -141,11 +140,14 @@ export default {
       this.currentPage = pageNum;
     },
     searchTextChanged() {
-      chrome.storage.local.set({
-        searchText: this.searchText
-      });
+      if (this.searchTextChangedCount >= 1) {
+        storage.set({
+          searchText: this.searchText
+        });
+      }
       this.currentPage = 1;
       this.descriptionHtml = "";
+      this.searchTextChangedCount += 1;
     },
     mouseover(descriptionHtml) {
       this.descriptionHtml = descriptionHtml;
@@ -212,10 +214,10 @@ export default {
       try {
         const latestContentId = record.getLatestContentId();
         const records = await fetcher.fetch(latestContentId);
-        record.saveRecords(records);
+        await record.saveRecords(records);
 
         const lastUpdated = text.format(new Date());
-        chrome.storage.local.set({
+        storage.set({
           lastUpdated: lastUpdated
         });
         this.lastUpdated = "最終更新:" + lastUpdated;

@@ -1,3 +1,5 @@
+import storage from "./storage";
+
 let _bundledRecords = [];
 let _fetchedRecords = [];
 
@@ -125,39 +127,76 @@ const cleanDescription = sourceDescription => {
   return description;
 };
 
+const mergeRecords = (currentRecords, newRecords) => {
+  let topContentId = null;
+  if (currentRecords && currentRecords[0]) {
+    topContentId = currentRecords[0].contentId;
+  }
+
+  const appends = [];
+  for (let i = 0; i < newRecords.length; i++) {
+    const r = newRecords[i];
+    if (r.contentId === topContentId) {
+      break;
+    }
+    appends.push(r);
+  }
+
+  return appends.concat(currentRecords);
+};
+
 export default {
   async initialize(from, to) {
     const bundledRecords = await loadBundledData(from, to);
     for (let i = 0; i < bundledRecords.length; i++) {
-      const r = bundledRecords[i];
-      r.description = cleanDescription(r.description);
+      const rec = bundledRecords[i];
+      rec.description = cleanDescription(rec.description);
     }
+    const fetchedRecords = await storage.getDatum("fetchedRecords");
     _bundledRecords = bundledRecords;
+    if (fetchedRecords) {
+      _fetchedRecords = fetchedRecords;
+    }
   },
   getRawRecords() {
-    const latestContentId = _bundledRecords && _bundledRecords[0] && _bundledRecords[0].contentId;
-    if (!latestContentId) {
+    const latestContentIdOfBundledRecords = _bundledRecords && _bundledRecords[0] && _bundledRecords[0].contentId;
+    if (!latestContentIdOfBundledRecords) {
       return [];
     }
     const fetchedRecords = [];
     if (_fetchedRecords) {
       for (let i = 0; i < _fetchedRecords.length; i++) {
         const r = _fetchedRecords[i];
-        if (r.contentId === latestContentId) {
+        if (r.contentId === latestContentIdOfBundledRecords) {
           break;
         }
         fetchedRecords.push(r);
       }
     }
-    const mergedRecords = fetchedRecords.concat(_bundledRecords);
+
+    const mergedRecords = [];
+    for (let i = 0; i < fetchedRecords.length; i++) {
+      const rec = Object.assign({}, fetchedRecords[i]);
+      rec.description = cleanDescription(rec.description);
+      mergedRecords.push(rec);
+    }
+    mergedRecords.push(..._bundledRecords);
     return mergedRecords;
   },
+
   search(searchText) {
     const mergedRecords = this.getRawRecords();
     return filter(mergedRecords, searchText);
   },
+
   getLatestContentId() {
-    return _bundledRecords && _bundledRecords[0] && _bundledRecords[0].contentId;
+    if (_fetchedRecords && _fetchedRecords[0] && _fetchedRecords[0].contentId) {
+      return _fetchedRecords[0].contentId;
+    }
+    if (_bundledRecords && _bundledRecords[0] && _bundledRecords[0].contentId) {
+      return _bundledRecords[0].contentId;
+    }
+    return null;
   },
 
   getRelativeRecord(contentId, offset) {
@@ -173,13 +212,14 @@ export default {
     return result;
   },
 
-  // TODO
-  saveRecords(newRecords) {
-    for (let i = 0; i < newRecords.length; i++) {
-      const r = newRecords[i];
-      r.description = cleanDescription(r.description);
-      console.info(r.description);
+  async saveRecords(newRecords) {
+    if (!newRecords || newRecords.length == 0) {
+      return;
     }
-    _fetchedRecords = newRecords;
+    const mergedRecords = mergeRecords(_fetchedRecords, newRecords);
+    await storage.set({
+      fetchedRecords: mergedRecords
+    });
+    _fetchedRecords = mergedRecords;
   }
 };
