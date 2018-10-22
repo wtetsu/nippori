@@ -6,8 +6,8 @@
     </div>
 
     <div style="height:35px;margin-top:10px;">
-      <a class="square_btn" @click="gotoPrev()">{{prevText}}</a>
-      <a class="square_btn" @click="gotoNext()">{{nextText}}</a>
+      <a v-if="enablePrevText" class="square_btn" @click="gotoPrev()">{{prevText}}</a>
+      <a v-if="enableNextText" class="square_btn" @click="gotoNext()">{{nextText}}</a>
 
       <span style="float: right">
         <img src="loading.gif" v-if="loading" width="12" height="12"/>
@@ -83,7 +83,10 @@ export default {
       loading: false,
       lastUpdated: "",
       prevText: "-",
-      nextText: "-"
+      nextText: "-",
+      enablePrevText: false,
+      enableNextText: false,
+      activeContentId: null
     };
   },
   async created() {
@@ -174,16 +177,25 @@ export default {
 
     updateLinkText(contentId) {
       const recPrev = record.getRelativeRecord(contentId, +1);
-      const recNext = record.getRelativeRecord(contentId, -1);
+      if (recPrev) {
+        this.prevText = this.createLinkText(recPrev);
+        this.enablePrevText = true;
+      } else {
+        this.enablePrevText = false;
+        this.prevText = "-";
+      }
 
-      this.prevText = this.createLinkText(recPrev);
-      this.nextText = this.createLinkText(recNext);
+      const recNext = record.getRelativeRecord(contentId, -1);
+      if (recNext) {
+        this.nextText = this.createLinkText(recNext);
+        this.enableNextText = true;
+      } else {
+        this.enableNextText = false;
+        this.nextText = "";
+      }
     },
 
     createLinkText(rec) {
-      if (!rec) {
-        return "-";
-      }
       const index = rec.title.indexOf(rec.date);
       let text;
       if (index >= 0) {
@@ -221,6 +233,7 @@ export default {
   },
   computed: {
     filteredRecords() {
+      this.descriptionHtml = "";
       _startTime = performance.now();
       const startPosition = this.pageSize * (this.currentPage - 1);
       const filteredRecords = record.search(this.searchText);
