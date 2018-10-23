@@ -1,6 +1,6 @@
 {
   "name": "Nippori",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "permissions": ["storage", "unlimitedStorage", "activeTab", "https://api.search.nicovideo.jp/api/*"],
   "browser_action": {
     "default_title": "Nippori",
