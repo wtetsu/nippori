@@ -41,5 +41,12 @@ export default {
     const m = pad(aDate.getMinutes());
     const s = pad(aDate.getSeconds());
     return `${year}/${month}/${date} ${h}:${m}:${s}`;
+  },
+  convertContentIdToNumber(contentId) {
+    let r = 0;
+    if (contentId.startsWith("sm")) {
+      r = parseInt(contentId.substring(2), 10);
+    }
+    return r;
   }
 };

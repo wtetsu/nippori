@@ -1,4 +1,5 @@
 import storage from "./storage";
+import text from "./text";
 
 let _bundledRecords = [];
 let _fetchedRecords = [];
@@ -127,24 +128,16 @@ const cleanDescription = sourceDescription => {
   return description;
 };
 
-const convertContentIdToNumber = contentId => {
-  let r = 0;
-  if (contentId.startsWith("sm")) {
-    r = parseInt(contentId.substring(2), 10);
-  }
-  return r;
-};
-
 const mergeRecords = (currentRecords, newRecords) => {
   let topContentNumber = 0;
   if (currentRecords && currentRecords[0]) {
-    topContentNumber = convertContentIdToNumber(currentRecords[0].contentId);
+    topContentNumber = text.convertContentIdToNumber(currentRecords[0].contentId);
   }
 
   const appends = [];
   for (let i = 0; i < newRecords.length; i++) {
     const r = newRecords[i];
-    const contentNumber = convertContentIdToNumber(r.contentId);
+    const contentNumber = text.convertContentIdToNumber(r.contentId);
     if (contentNumber <= topContentNumber) {
       break;
     }

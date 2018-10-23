@@ -1,4 +1,5 @@
 import axios from "axios";
+import text from "./text";
 
 // http://site.nicovideo.jp/search-api-docs/search.html
 const API_ENDPOINT = "https://api.search.nicovideo.jp/api/v2/video/contents/search";
@@ -21,10 +22,12 @@ export default {
     if (!latestContentId) {
       return [];
     }
+    const latestContentNumber = text.convertContentIdToNumber(latestContentId);
+
     const records = [];
     for (let offset = 0; offset <= 1000; offset += 10) {
       const fetchedRecords = await fetchRecords(offset);
-      const index = fetchedRecords.findIndex(r => r.contentId === latestContentId);
+      const index = fetchedRecords.findIndex(r => text.convertContentIdToNumber(r.contentId) <= latestContentNumber);
       if (index >= 0) {
         records.push(...fetchedRecords.slice(0, index));
         break;
