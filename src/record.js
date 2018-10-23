@@ -127,16 +127,25 @@ const cleanDescription = sourceDescription => {
   return description;
 };
 
+const convertContentIdToNumber = contentId => {
+  let r = 0;
+  if (contentId.startsWith("sm")) {
+    r = parseInt(contentId.substring(2), 10);
+  }
+  return r;
+};
+
 const mergeRecords = (currentRecords, newRecords) => {
-  let topContentId = null;
+  let topContentNumber = 0;
   if (currentRecords && currentRecords[0]) {
-    topContentId = currentRecords[0].contentId;
+    topContentNumber = convertContentIdToNumber(currentRecords[0].contentId);
   }
 
   const appends = [];
   for (let i = 0; i < newRecords.length; i++) {
     const r = newRecords[i];
-    if (r.contentId === topContentId) {
+    const contentNumber = convertContentIdToNumber(r.contentId);
+    if (contentNumber <= topContentNumber) {
       break;
     }
     appends.push(r);
@@ -221,5 +230,7 @@ export default {
       fetchedRecords: mergedRecords
     });
     _fetchedRecords = mergedRecords;
-  }
+  },
+
+  mergeRecords: mergeRecords
 };
