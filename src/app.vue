@@ -87,7 +87,8 @@ export default {
       enablePrevText: false,
       enableNextText: false,
       activeContentId: null,
-      searchTextChangedCount: 0
+      searchTextChangedCount: 0,
+      initializing: true
     };
   },
   async created() {
@@ -118,6 +119,7 @@ export default {
     }
 
     const searchText = await storage.getDatum("searchText");
+    this.initializing = false;
     if (searchText) {
       this.searchText = searchText;
     }
@@ -235,6 +237,9 @@ export default {
   },
   computed: {
     filteredRecords() {
+      if (this.initializing) {
+        return [];
+      }
       this.descriptionHtml = "";
       _startTime = performance.now();
       const startPosition = this.pageSize * (this.currentPage - 1);
