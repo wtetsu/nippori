@@ -1,10 +1,8 @@
 <template>
   <div style="width:450px;height:580px;overflow:hidden;">
-
     <div  style="position: absolute; top:3px; right:3px;">
       <span style="color:#555555;font-size:smaller;">{{lastUpdated}}</span>
     </div>
-
     <div style="height:35px;margin-top:10px;">
       <a v-if="enablePrevText" class="square_btn" @click="gotoPrev()">{{prevText}}</a>
       <a v-if="enableNextText" class="square_btn" @click="gotoNext()">{{nextText}}</a>
@@ -14,17 +12,13 @@
         <a class="square_btn2" @click="fetchRecords()">最新データ取得</a>
       </span>
     </div>
-
     <hr/>
-
     <input type="search" v-model="searchText" v-on:keyup="searchTextChanged()" @change="searchTextChanged()" ref="searchText"  maxlength="50" />
     {{searchResult}}
-
     <paginate v-model="currentPage" :page-count="pageCount" :click-handler="onClickPagination" :prev-text="'←'"
       :next-text="'→'" :active-class="'current'" :container-class="'pagination'" :page-range="7"
       >
     </paginate>
-
     <div style="height:450px;overflow-y:scroll;">
       <div v-for="dateRecords in filteredRecords" :key="dateRecords.date">
         <span>{{dateRecords.date}}</span>
@@ -38,11 +32,9 @@
       </div>
       <div style="height:250px;"></div>
     </div>
-
     <div style="width:430px;position:absolute;bottom:0px;font-size:small;color:#F5F5F5;background-color:#303030;opacity:0.90">
       <span v-html="descriptionHtml"></span>
     </div>
-
   </div> 
 </template>
 
@@ -86,6 +78,8 @@ export default {
       nextText: "-",
       enablePrevText: false,
       enableNextText: false,
+      prevContentId: null,
+      nextContentId: null,
       activeContentId: null,
       searchTextChangedCount: 0,
       initializing: true
@@ -155,18 +149,11 @@ export default {
       this.descriptionHtml = descriptionHtml;
     },
     gotoPrev() {
-      const r = record.getRelativeRecord(this.activeContentId, +1);
-      if (r) {
-        this.jumpToTheMovie(r.contentId);
-      }
+      this.jumpToTheMovie(this.prevContentId);
     },
     gotoNext() {
-      const r = record.getRelativeRecord(this.activeContentId, -1);
-      if (r) {
-        this.jumpToTheMovie(r.contentId);
-      }
+      this.jumpToTheMovie(this.nextContentId);
     },
-
     jumpToTheMovie(contentId) {
       if (!contentId) {
         return;
@@ -183,18 +170,22 @@ export default {
       const recPrev = record.getRelativeRecord(contentId, +1);
       if (recPrev) {
         this.prevText = this.createLinkText(recPrev);
+        this.prevContentId = recPrev.contentId;
         this.enablePrevText = true;
       } else {
         this.enablePrevText = false;
+        this.prevContentId = null;
         this.prevText = "-";
       }
 
       const recNext = record.getRelativeRecord(contentId, -1);
       if (recNext) {
         this.nextText = this.createLinkText(recNext);
+        this.nextContentId = recNext.contentId;
         this.enableNextText = true;
       } else {
         this.enableNextText = false;
+        this.prevContentId = null;
         this.nextText = "";
       }
     },
