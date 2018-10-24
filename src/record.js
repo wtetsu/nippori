@@ -71,7 +71,7 @@ const hit = (records, searchTextList) => {
   return hitCount >= searchTextList.length;
 };
 
-const replaceRules = [
+const REPLACE_RULES = [
   {
     type: "r",
     search: /PV■.+?<br \/><br \/><br \/>/,
@@ -107,27 +107,6 @@ const replaceRules = [
   }
 ];
 
-const cleanDescription = sourceDescription => {
-  let index, description;
-  description = sourceDescription;
-
-  for (let i = 0; i < replaceRules.length; i++) {
-    const rule = replaceRules[i];
-    switch (rule.type) {
-      case "r":
-        description = description.replace(rule.search, rule.new);
-        break;
-      case "a":
-        index = description.indexOf(rule.search);
-        if (index >= 0) {
-          description = description.substring(0, index);
-        }
-        break;
-    }
-  }
-  return description;
-};
-
 const mergeRecords = (currentRecords, newRecords) => {
   let topContentNumber = 0;
   if (currentRecords && currentRecords[0]) {
@@ -152,7 +131,7 @@ export default {
     const bundledRecords = await loadBundledData(from, to);
     for (let i = 0; i < bundledRecords.length; i++) {
       const rec = bundledRecords[i];
-      rec.description = cleanDescription(rec.description);
+      rec.description = text.replaceByRule(rec.description, REPLACE_RULES);
     }
     const fetchedRecords = await storage.getDatum("fetchedRecords");
     _bundledRecords = bundledRecords;
@@ -179,7 +158,7 @@ export default {
     const mergedRecords = [];
     for (let i = 0; i < fetchedRecords.length; i++) {
       const rec = Object.assign({}, fetchedRecords[i]);
-      rec.description = cleanDescription(rec.description);
+      rec.description = text.replaceByRule(rec.description, REPLACE_RULES);
       mergedRecords.push(rec);
     }
     mergedRecords.push(..._bundledRecords);
