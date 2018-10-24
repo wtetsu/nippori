@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/wtetsu/nippori.svg?branch=master)](https://travis-ci.org/wtetsu/nippori)
+[![Code Climate](https://codeclimate.com/github/wtetsu/nippori/badges/gpa.svg)](https://codeclimate.com/github/wtetsu/nippori)
+
 # Nippori
 
 A Chrome extension that enables you to search Versus Touzaisen videos in 1 frame, which is even faster than Dhalsim's thrust kick!
