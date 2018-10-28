@@ -27,6 +27,10 @@ Build:
 npm run build
 ```
 
+## License
+
+Nippori is published under the MIT license.
+
 ## Third-party data
 
 https://www.iconfinder.com/icons/1886932/enable_eye_view_views_watch_icon

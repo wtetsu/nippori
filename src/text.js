@@ -1,3 +1,8 @@
+/**
+ * Nippori (https://github.com/wtetsu/nippori/)
+ * Copyright 2018-present wtetsu
+ * Licensed under MIT
+ */
 const pad = num => {
   return num.toString().padStart(2, 0);
 };

@@ -1,3 +1,8 @@
+<!--
+  Nippori (https://github.com/wtetsu/nippori/)
+  Copyright 2018-present wtetsu
+  Licensed under MIT
+-->
 <template>
   <div style="width:450px;height:580px;overflow:hidden;">
     <div  style="position: absolute; top:3px; right:3px;">
